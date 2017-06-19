@@ -16,6 +16,7 @@ setup(name='becbacnet',
     py_modules=['becbacnet'],
     zip_safe=True,
     install_requires=[
-        'requests'
+        'requests',
+        'untangle'
     ],
 )
