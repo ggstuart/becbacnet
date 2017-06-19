@@ -31,10 +31,9 @@ class EnteliwebClient(object):
     def uri(self, endpoint):
         return "{}/enteliweb/{}/{}".format(self.base_uri, self.org, endpoint)
 
-
     def get(self, *args, **kwargs):
         uri = self.uri(args[0])
-        log.info("connecting to {}".format(uri))
+        log.debug("connecting to {}".format(uri))
         try:
             return get(uri, *args[1:], **kwargs)
         except ConnectionError as exc:
