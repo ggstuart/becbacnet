@@ -1,7 +1,6 @@
 import logging
 import os.path
-import untangle
-from xml.sax._exceptions import SAXParseException
+import json
 from datetime import datetime, date, timedelta
 from requests import get
 from requests.exceptions import ConnectionError
@@ -11,7 +10,7 @@ log = logging.getLogger('becbacnet')
 logging.basicConfig(level=logging.WARNING)
 
 headers = {
-    # "Accept": "application/json"
+    "Accept": "application/json"
 }
 fmt = "%Y-%m-%d"
 
@@ -41,7 +40,7 @@ class EnteliwebClient(object):
 
     def resource(self):
         response = self.get('resource', headers=headers)
-        return [r.cdata for r in untangle.parse(response.text).ResourceList.Resource]
+        return response.json()['ResourceList']
 
     def consumption(self, meter_list, start_time, end_time, interval, resource):
         payload = {
@@ -55,39 +54,14 @@ class EnteliwebClient(object):
         response = self.get('data', params=payload, headers=headers)
         if response.status_code != 200:
             raise EntelliwebError("HTTP {}: {}".format(response.status_code, response.text))
-        try:
-            data = untangle.parse(response.text)
-        except SAXParseException as exc:
-            raise EntelliwebError("{}\n\nBad XML:\n\n{}\n".format(exc, response.text))
-        try:
-            data = data.ReportData
-        except AttributeError as exc:
-            if data.Error:
-                raise EntelliwebError("{}: {}".format(data.Error.Code.cdata, data.Error.Message.cdata))
-            else:
-                log.error(exc)
-                log.error(data)
-                raise EntelliwebError("UNEXPECTED ERROR!!!")
-        try:
-            data = data.Row
-        except AttributeError as exc:
-            raise EntelliwebError("No data found!!!")
+        return response.text
 
-        return [{
-            'identifier': row.Meter.cdata,
-            'timestamp': row.Timeslice.cdata,
-            'total': row.Total.cdata,
-        } for row in data]
 
-    def meters(self, from_file=None):
-        if from_file:
-            with open(from_file, 'r') as f:
-                data = f.read()
-        else:
-            response = self.get('meter', headers=headers)
-            data = response.text
+    def meters(self):
+        response = self.get('meter', headers=headers)
+        data = response.json()
         return [{
-            'identifier': m.ID.cdata,
-            'label': m.Name.cdata,
-            'description': m.Description.cdata
-        } for m in untangle.parse(data).MeterList.Meter]
+            'identifier': m['ID'],
+            'label': m['Name'],
+            'description': m['Description']
+        } for m in data['MeterList']]
