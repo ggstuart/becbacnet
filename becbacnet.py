@@ -55,7 +55,10 @@ class EnteliwebClient(object):
         response = self.get('data', params=payload, headers=headers)
         if response.status_code != 200:
             raise EntelliwebError("HTTP {}: {}".format(response.status_code, response.text))
-        data = untangle.parse(response.text)
+        try:
+            data = untangle.parse(response.text)
+        except SAXParseException as exc:
+            raise EntelliwebError("{}\n\nBad XML:\n\n{}\n".format(exc, response.text))
         try:
             data = data.ReportData
         except AttributeError as exc:
