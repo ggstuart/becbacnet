@@ -42,15 +42,17 @@ class EnteliwebClient(object):
         response = self.get('resource', headers=headers)
         return response.json()['ResourceList']
 
-    def consumption(self, meter_list, start_time, end_time, interval, resource):
+    def consumption(self, meter_list, start_time, end_time, interval, resource, by_id=True):
         payload = {
             "meterlist[]": meter_list,
             "start": start_time.strftime(fmt),
             "end": end_time.strftime(fmt),
             "interval": interval,
             "resource": resource,
-            "search": "id"
         }
+        if by_id:
+            payload["search"] = "id"
+
         response = self.get('data', params=payload, headers=headers)
         if response.status_code != 200:
             raise EntelliwebError("HTTP {}: {}".format(response.status_code, response.text))

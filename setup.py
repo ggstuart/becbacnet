@@ -4,7 +4,7 @@ import os
 from setuptools import setup
 
 setup(name='becbacnet',
-    version="0.0.3",
+    version="0.0.4",
     description='client for becbacnet API',
     classifiers=[
         "Programming Language :: Python",
